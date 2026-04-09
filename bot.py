@@ -887,8 +887,13 @@ async def main():
 
     print("Bot running...")
 
-    await app.run_polling()
+    await app.initialize()
+    await app.start()
+    await app.updater.start_polling()
+
+    # 👇 bot ko alive rakhega
+    await asyncio.Event().wait()
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    asyncio.run(main())       
