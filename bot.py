@@ -11,7 +11,6 @@ load_dotenv()
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 import isodate
 from datetime import datetime
-from telegram import Update
 from telegram.ext import ApplicationBuilder, MessageHandler, CommandHandler, CallbackQueryHandler, ContextTypes, filters
 from telegram.error import Forbidden, BadRequest
 
