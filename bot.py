@@ -11,6 +11,7 @@ load_dotenv()
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 import isodate
 from datetime import datetime
+from telegram import Update
 from telegram.ext import ApplicationBuilder, MessageHandler, CommandHandler, CallbackQueryHandler, ContextTypes, filters
 from telegram.error import Forbidden, BadRequest
 
@@ -861,16 +862,13 @@ async def handle_link(update: Update, context: ContextTypes.DEFAULT_TYPE):
             "<b>❌ Could not fetch channel or video details.</b>",
             parse_mode="HTML"
         )
-def main():
+async def main():
     global db_pool
 
-    loop = asyncio.get_event_loop()
-    db_pool = loop.run_until_complete(
-        asyncpg.create_pool(
-            DATABASE_URL,
-            min_size=1,
-            max_size=5
-        )
+    db_pool = await asyncpg.create_pool(
+        DATABASE_URL,
+        min_size=1,
+        max_size=5
     )
 
     app = ApplicationBuilder().token(BOT_TOKEN).build()
@@ -878,25 +876,25 @@ def main():
     register_core_panel(app)
 
     app.add_handler(
-    MessageHandler(
-        ~filters.COMMAND & filters.User(ADMIN_ID),
-        broadcast_message
-    ))
-
-    # ✅ COMMANDS
-    app.add_handler(CommandHandler("start", start), group=1)
-    # ✅ ADMIN TEXT (broadcast)
-    app.add_handler(
-        MessageHandler(filters.TEXT & ~filters.COMMAND & filters.User(ADMIN_ID),
-        broadcast_message),
-        group=2
+        MessageHandler(
+            ~filters.COMMAND & filters.User(ADMIN_ID),
+            broadcast_message
+        )
     )
 
-    # ✅ NORMAL USER TEXT (verify gate)
+    app.add_handler(CommandHandler("start", start))
+    app.add_handler(CallbackQueryHandler(audio_callback, pattern="^audio"))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_link))
 
     print("Bot running...")
-    app.run_polling()
+
+    await app.initialize()
+    await app.start()
+    await app.updater.start_polling()
+
+    # 👇 bot ko alive rakhega
+    await asyncio.Event().wait()
+
 
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())       
